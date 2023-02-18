@@ -1,33 +1,56 @@
 const db = require('../models')
 const { Op } = require('sequelize')
+const admin = require("firebase-admin");
+const serviceAccount = require("../key/firebase_key.json");
+const { storageBucket, createPersistentDownloadUrl } = require('../key/firebase_storage');
+const UUID = require("uuid-v4");
 
 const Wardrobe = db.wardrobes
+
+const firebaseApp = admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: storageBucket
+});
+const storage = firebaseApp.storage();
+const bucket = storage.bucket();
 
 // ------------ CREATE ------------
 
 // create wardrobe
 const addWardrobe = async (req, res) => {
     if (req.files) {
+        let uuid = UUID();
         let file = await req.files.file
         let fileName = file.name
         fileName = fileName.split('.').join('-' + Date.now() + '.');
-        file.mv(`./../chom-tu-frontend/assets/data/wardrobe/${fileName}`, async function (err) {
-            if (err) {
-                res.send(err)
-            } else {
-                let info = {
-                    user_id: req.body.user_id,
-                    category: req.body.category,
-                    color: req.body.color,
-                    type: req.body.type,
-                    is_favorite: false,
-                    wardrobe_img: `assets/data/wardrobe/${fileName}`
-                }
+        fileName = `wardrobe/${fileName}`
 
-                const wardrobe = await Wardrobe.create(info)
-                res.status(200).send(wardrobe)
+        const fileUpload = bucket.file(fileName);
+        const blobStream = fileUpload.createWriteStream({
+            metadata: {
+                contentType: file.mimetype,
+                firebaseStorageDownloadTokens: uuid
             }
-        })
+        });
+
+        blobStream.on("error", (err) => {
+            res.status(405).json(err);
+        });
+    
+        blobStream.on("finish", async () => {
+            let info = {
+                user_id: req.body.user_id,
+                category: req.body.category,
+                color: req.body.color,
+                type: req.body.type,
+                is_favorite: false,
+                wardrobe_img: createPersistentDownloadUrl(fileName, uuid)
+            }
+            const wardrobe = await Wardrobe.create(info)
+            res.status(200).send(wardrobe)
+        });
+    
+        blobStream.end(file.data);
     } else {
         res.status(400).send()
     }

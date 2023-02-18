@@ -1,4 +1,4 @@
-const { detectColorKey } = require('../key_detect_api');
+const { detectColorKey } = require('../key/key_detect_api');
 const { toPascalCase } = require('../utils/to_pascal_case_func');
 
 async function detectColor (buffer) {

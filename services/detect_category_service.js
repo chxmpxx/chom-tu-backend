@@ -1,4 +1,4 @@
-const { detectTypeAndCategoryKey } = require("../key_detect_api");
+const { detectTypeAndCategoryKey } = require("../key/key_detect_api");
 const { toPascalCase } = require("../utils/to_pascal_case_func");
 
 async function detectTypeAndCategory (buffer) {
