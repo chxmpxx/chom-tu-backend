@@ -19,12 +19,12 @@ const router = require('./routes/wardrobe_router')
 app.use('/api/wardrobe', router)
 
 // testing api
-app.use('/', (req, res) => {
-    res.json({ message: 'hello from chomTu api' })
+app.use('/chomtu', (req, res) => {
+    res.json({ message: 'hello from ChomTu api' })
 })
 
 // port
-const PORT = process.env.PORT || 8080
+const PORT = process.env.PORT || 3000
 
 // server
 app.listen(PORT, () => {

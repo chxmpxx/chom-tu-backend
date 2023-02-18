@@ -46,10 +46,14 @@ function findTypeAndCategory(data) {
     if (type.name == 'top, t-shirt, sweatshirt') {
       type.name = 't shirt'
     }
+    else if (type.name == 'outwear') {
+      type.name = 'Jacket'
+    }
   } else if (type.name == 'shorts' || type.name == 'trousers' || type.name == 'skirt') {
     category = 'Bottom'
   } else if (type.name == 'dress') {
     category = 'Set'
+    type.name = 'Mini Dress'
   } else if (type.name == 'footwear') {
     category = 'Shoes'
   } else {

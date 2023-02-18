@@ -7,18 +7,30 @@ const Wardrobe = db.wardrobes
 
 // create wardrobe
 const addWardrobe = async (req, res) => {
-    let info = {
-        user_id: req.body.user_id,
-        category: req.body.category,
-        color: req.body.color,
-        type: req.body.type,
-        is_favorite: req.body.is_favorite,
-        wardrobe_img: req.body.wardrobe_img
-    }
+    if (req.files) {
+        let file = await req.files.file
+        let fileName = file.name
+        fileName = fileName.split('.').join('-' + Date.now() + '.');
+        file.mv(`./../chom-tu-frontend/assets/data/wardrobe/${fileName}`, async function (err) {
+            if (err) {
+                res.send(err)
+            } else {
+                let info = {
+                    user_id: req.body.user_id,
+                    category: req.body.category,
+                    color: req.body.color,
+                    type: req.body.type,
+                    is_favorite: false,
+                    wardrobe_img: `assets/data/wardrobe/${fileName}`
+                }
 
-    const wardrobe = await Wardrobe.create(info)
-    res.status(200).send(wardrobe)
-    console.log(wardrobe);
+                const wardrobe = await Wardrobe.create(info)
+                res.status(200).send(wardrobe)
+            }
+        })
+    } else {
+        res.status(400).send()
+    }
 }
 
 // ------------ READ ------------
@@ -30,7 +42,7 @@ const getAllWardrobes = async (req, res) => {
     let type = req.body.type
     let wardrobes;
 
-    if(color != 'None' && type != 'None') {
+    if(color[0] != 'None' && type[0] != 'None') {
         wardrobes = await Wardrobe.findAll({ 
             where: {
                 category: category,
@@ -38,22 +50,24 @@ const getAllWardrobes = async (req, res) => {
                 type: { [Op.in]: type }
             }
         })
-    } else if(color == 'None' && type != 'None') {
+    } else if(color[0] == 'None' && type[0] != 'None') {
         wardrobes = await Wardrobe.findAll({
             where: {
                 category: category,
                 type: { [Op.in]:type }
             }
         })
-    } else if(color != 'None' && type == 'None') {
+    } else if(color[0] != 'None' && type[0] == 'None') {
         wardrobes = await Wardrobe.findAll({
             where: {
                 category: category,
                 color: { [Op.in]:color }
             }
         })
-    } else {
+    } else if(color[0] == 'None' && type[0] == 'None') {
         wardrobes = await Wardrobe.findAll({ where: { category: category } })
+    } else {
+        res.status(400).send()
     }
     
     res.status(200).send(wardrobes)
