@@ -4,6 +4,8 @@ const admin = require("firebase-admin");
 const serviceAccount = require("../key/firebase_key.json");
 const { storageBucket, createPersistentDownloadUrl } = require('../key/firebase_storage');
 const UUID = require("uuid-v4");
+const { detectTypeAndCategory } = require("../services/detect_category_service");
+const { detectColor } = require("../services/detect_color_service");
 
 const Wardrobe = db.wardrobes
 
@@ -41,6 +43,7 @@ const addWardrobe = async (req, res) => {
             let info = {
                 user_id: req.body.user_id,
                 category: req.body.category,
+                sub_category: req.body.sub_category,
                 color: req.body.color,
                 type: req.body.type,
                 is_favorite: false,
@@ -63,34 +66,53 @@ const getAllWardrobes = async (req, res) => {
     let category = req.body.category
     let color = req.body.color
     let type = req.body.type
-    let wardrobes;
+    let wardrobes = [];
 
-    if(color[0] != 'None' && type[0] != 'None') {
-        wardrobes = await Wardrobe.findAll({ 
-            where: {
-                category: category,
-                color: { [Op.in]: color },
-                type: { [Op.in]: type }
-            }
-        })
-    } else if(color[0] == 'None' && type[0] != 'None') {
-        wardrobes = await Wardrobe.findAll({
-            where: {
-                category: category,
-                type: { [Op.in]:type }
-            }
-        })
-    } else if(color[0] != 'None' && type[0] == 'None') {
-        wardrobes = await Wardrobe.findAll({
-            where: {
-                category: category,
-                color: { [Op.in]:color }
-            }
-        })
-    } else if(color[0] == 'None' && type[0] == 'None') {
-        wardrobes = await Wardrobe.findAll({ where: { category: category } })
+    let where = {category: category};
+        
+    if (color.length != 0) {
+        where.color =  { [Op.in]: color }
+    }
+
+    if (category == 'Bottom') {
+        let skirts = []
+        let shorts = []
+        let trousers = []
+
+        if (type.skirts.length != 0) {
+            where.sub_category = 'Skirts'
+            where.type =  { [Op.in]: type.skirts }
+
+            skirts = await Wardrobe.findAll({ where: where })
+        }
+
+        if (type.shorts.length != 0) {
+            where.sub_category = 'Shorts'
+            where.type =  { [Op.in]: type.shorts }
+
+            shorts = await Wardrobe.findAll({ where: where })
+        }
+
+        if (type.trousers.length != 0) {
+            where.sub_category = 'Trousers'
+            where.type =  { [Op.in]: type.trousers }
+
+            trousers = await Wardrobe.findAll({ where: where })
+        }
+
+        if (type.skirts.length == 0 && type.shorts.length == 0 && type.trousers.length == 0) {
+            wardrobes = await Wardrobe.findAll({ where: where })
+        }
+
+        wardrobes = wardrobes.concat(skirts);
+        wardrobes = wardrobes.concat(shorts);
+        wardrobes = wardrobes.concat(trousers);
     } else {
-        res.status(400).send()
+        if (type.length != 0) {
+            where.type =  { [Op.in]: type }
+        }
+      
+        wardrobes = await Wardrobe.findAll({ where: where })
     }
     
     res.status(200).send(wardrobes)
@@ -114,8 +136,14 @@ const getOneWardrobe = async (req, res) => {
 // update wardrobe
 const updateWardrobe = async (req, res) => {
     let id = req.params.id
-    const wardrobe = await Wardrobe.update(req.body, {where: { id: id }})
-    res.status(200).send(wardrobe)
+    if(req.files) {
+        // todo: change image in firebase
+        const wardrobe = await Wardrobe.update(req.body, {where: { id: id }})
+        res.status(200).send(wardrobe)
+    } else {
+        const wardrobe = await Wardrobe.update(req.body, {where: { id: id }})
+        res.status(200).send(wardrobe)
+    }
 }
 
 // ------------ DELETE ------------
@@ -127,12 +155,29 @@ const deleteWardrobe = async (req, res) => {
     res.status(200).send('Wardrobe is delete!')
 }
 
+// ------------ SERVICE ------------
+
+// wardrobe detection
+const wardrobeDetection = async (req, res) => {
+    if (req.files) {
+        let file = await req.files.file
+        // todo: add sub cat
+        // let result = await detectTypeAndCategory(file.data)
+        // result.color = await detectColor(file.data)
+
+        let result = { category: 'Top', subCategory: 'None', color: 'Pink', type: 'Vest'}
+        res.status(200).send(result)
+    }
+    res.status(400).send()
+}
+
 module.exports = {
     addWardrobe,
 
     getAllWardrobes,
     getOneWardrobe,
     getAllFavWardrobes,
+    wardrobeDetection,
 
     updateWardrobe,
     deleteWardrobe

@@ -39,6 +39,8 @@ function findTypeAndCategory(data) {
     }
   }
 
+  let subCategory = 'None';
+
   // find category
   let category = 'None'
   if (type.name == 'top, t-shirt, sweatshirt' || type.name == 'outwear' || type.name == 'vest') {
@@ -51,6 +53,12 @@ function findTypeAndCategory(data) {
     }
   } else if (type.name == 'shorts' || type.name == 'trousers' || type.name == 'skirt') {
     category = 'Bottom'
+    subCategory = type.name
+    if (type.name == 'shorts' || type.name == 'trousers') {
+      type.name = 'Straight Lag'
+    } else {
+      type.name = 'A Line'
+    }
   } else if (type.name == 'dress') {
     category = 'Set'
     type.name = 'Mini Dress'
@@ -60,7 +68,7 @@ function findTypeAndCategory(data) {
     category = 'Accessory'
   }
 
-  let result = {category: category, type: toPascalCase(type.name)}
+  let result = {category: category, subCategory: toPascalCase(subCategory), type: toPascalCase(type.name)}
   return result
 }
 
