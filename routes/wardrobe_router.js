@@ -6,8 +6,10 @@ const router = require('express').Router()
 // use router
 
 router.post('/all_wardrobe', wardrobeController.getAllWardrobes)
+router.post('/all_fav_wardrobe', wardrobeController.getAllFavWardrobes)
 router.post('/add_wardrobe', wardrobeController.addWardrobe)
 router.post('/detect_wardrobe', wardrobeController.wardrobeDetection)
+router.post('/fav_wardrobe/:id', wardrobeController.favWardrobe)
 
 router.get('/:id', wardrobeController.getOneWardrobe)
 router.put('/:id', wardrobeController.updateWardrobe)

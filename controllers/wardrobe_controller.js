@@ -66,9 +66,10 @@ const getAllWardrobes = async (req, res) => {
     let category = req.body.category
     let color = req.body.color
     let type = req.body.type
-    let wardrobes = [];
+    let order = req.body.order
 
-    let where = {category: category};
+    let wardrobes = [];
+    let where = {category: category}
         
     if (color.length != 0) {
         where.color =  { [Op.in]: color }
@@ -83,25 +84,25 @@ const getAllWardrobes = async (req, res) => {
             where.sub_category = 'Skirts'
             where.type =  { [Op.in]: type.skirts }
 
-            skirts = await Wardrobe.findAll({ where: where })
+            skirts = await Wardrobe.findAll({ where: where, order: order })
         }
 
         if (type.shorts.length != 0) {
             where.sub_category = 'Shorts'
             where.type =  { [Op.in]: type.shorts }
 
-            shorts = await Wardrobe.findAll({ where: where })
+            shorts = await Wardrobe.findAll({ where: where, order: order })
         }
 
         if (type.trousers.length != 0) {
             where.sub_category = 'Trousers'
             where.type =  { [Op.in]: type.trousers }
 
-            trousers = await Wardrobe.findAll({ where: where })
+            trousers = await Wardrobe.findAll({ where: where, order: order })
         }
 
         if (type.skirts.length == 0 && type.shorts.length == 0 && type.trousers.length == 0) {
-            wardrobes = await Wardrobe.findAll({ where: where })
+            wardrobes = await Wardrobe.findAll({ where: where, order: order })
         }
 
         wardrobes = wardrobes.concat(skirts);
@@ -112,7 +113,7 @@ const getAllWardrobes = async (req, res) => {
             where.type =  { [Op.in]: type }
         }
       
-        wardrobes = await Wardrobe.findAll({ where: where })
+        wardrobes = await Wardrobe.findAll({ where: where, order: order })
     }
     
     res.status(200).send(wardrobes)
@@ -120,7 +121,15 @@ const getAllWardrobes = async (req, res) => {
 
 // get all favorite wardrobes
 const getAllFavWardrobes = async (req, res) => {
-    let wardrobes = await Wardrobe.findAll({ where: { is_favorite: true } })
+    let order = req.body.order
+    let color = req.body.color
+    let where = { is_favorite: true }
+        
+    if (color.length != 0) {
+        where.color =  { [Op.in]: color }
+    }
+
+    let wardrobes = await Wardrobe.findAll({ where: where, order: order })
     res.status(200).send(wardrobes)
 }
 
@@ -137,13 +146,19 @@ const getOneWardrobe = async (req, res) => {
 const updateWardrobe = async (req, res) => {
     let id = req.params.id
     if(req.files) {
-        // todo: change image in firebase
+        // todo: update firebase image
         const wardrobe = await Wardrobe.update(req.body, {where: { id: id }})
         res.status(200).send(wardrobe)
     } else {
         const wardrobe = await Wardrobe.update(req.body, {where: { id: id }})
         res.status(200).send(wardrobe)
     }
+}
+
+const favWardrobe = async (req, res) => {
+    let id = req.params.id
+    await Wardrobe.update(req.body, {where: { id: id }})
+    res.status(200).send('success')
 }
 
 // ------------ DELETE ------------
@@ -180,5 +195,7 @@ module.exports = {
     wardrobeDetection,
 
     updateWardrobe,
+    favWardrobe,
+
     deleteWardrobe
 }
