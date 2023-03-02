@@ -15,8 +15,13 @@ app.use(express.urlencoded({ extended: true }))
 app.use(upload())
 
 // router
-const router = require('./routes/wardrobe_router')
-app.use('/api/wardrobe', router)
+const wardrobeRouter = require('./routes/wardrobe_router')
+const outfitRouter = require('./routes/outfit_router')
+const componentRouter = require('./routes/component_router')
+
+app.use('/api/wardrobe', wardrobeRouter)
+app.use('/api/outfit', outfitRouter)
+app.use('/api/component', componentRouter)
 
 // testing api
 app.use('/chomtu', (req, res) => {

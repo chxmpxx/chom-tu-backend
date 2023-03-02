@@ -1,18 +1,14 @@
 const db = require('../models')
 const { Op } = require('sequelize')
-const admin = require("firebase-admin");
-const serviceAccount = require("../key/firebase_key.json");
-const { storageBucket, createPersistentDownloadUrl } = require('../key/firebase_storage');
+const firebaseApp = require("../config/firebase_config");
+const { createPersistentDownloadUrl } = require('../key/firebase_storage');
 const UUID = require("uuid-v4");
 const { detectTypeAndCategory } = require("../services/detect_category_service");
 const { detectColor } = require("../services/detect_color_service");
 
 const Wardrobe = db.wardrobes
+const Component = db.components
 
-const firebaseApp = admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    storageBucket: storageBucket
-});
 const storage = firebaseApp.storage();
 const bucket = storage.bucket();
 
@@ -67,12 +63,19 @@ const getAllWardrobes = async (req, res) => {
     let color = req.body.color
     let type = req.body.type
     let order = req.body.order
+    let isOutfit = req.body.isOutfit
+    let wardrobeIdList = req.body.wardrobeIdList
+    let bottom = req.body.bottom
 
     let wardrobes = [];
     let where = {category: category}
         
     if (color.length != 0) {
         where.color =  { [Op.in]: color }
+    }
+
+    if (isOutfit && wardrobeIdList.length != 0) {
+        where.id = { [Op.notIn]: wardrobeIdList }
     }
 
     if (category == 'Bottom') {
@@ -102,6 +105,9 @@ const getAllWardrobes = async (req, res) => {
         }
 
         if (type.skirts.length == 0 && type.shorts.length == 0 && type.trousers.length == 0) {
+            if (isOutfit) {
+                where.sub_category = bottom
+            }
             wardrobes = await Wardrobe.findAll({ where: where, order: order })
         }
 
@@ -140,6 +146,18 @@ const getOneWardrobe = async (req, res) => {
     res.status(200).send(wardrobe)
 }
 
+// get list of outfit id that contain this wardrobe
+const getOutfitIdFromWardrobe = async (req, res) => {
+    let id = req.params.id
+    let outfitId = await Component.findAll({
+        where: { wardrobe_id: id },
+        attributes: ['outfit_id']
+    })
+    console.log(outfitId);
+    const outfitIdList = outfitId.map(item => item.outfit_id);
+    res.status(200).send(outfitIdList)
+}
+
 // ------------ UPDATE ------------
 
 // update wardrobe
@@ -176,7 +194,6 @@ const deleteWardrobe = async (req, res) => {
 const wardrobeDetection = async (req, res) => {
     if (req.files) {
         let file = await req.files.file
-        // todo: add sub cat
         // let result = await detectTypeAndCategory(file.data)
         // result.color = await detectColor(file.data)
 
@@ -193,6 +210,7 @@ module.exports = {
     getOneWardrobe,
     getAllFavWardrobes,
     wardrobeDetection,
+    getOutfitIdFromWardrobe,
 
     updateWardrobe,
     favWardrobe,

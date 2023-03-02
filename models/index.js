@@ -33,10 +33,33 @@ db.Sequelize = Sequelize
 db.sequelize = sequelize
 
 db.wardrobes = require('./wardrobe_model.js')(sequelize, DataTypes)
+db.outfits = require('./outfit_model.js')(sequelize, DataTypes)
+db.components = require('./component_model.js')(sequelize, DataTypes)
 
 db.sequelize.sync({ force: false })
 .then(() => {
     console.log('yes re-sync done!');
+})
+
+// create Relationships
+db.wardrobes.hasMany(db.components, {
+    foreignKey: 'wardrobe_id',
+    as: 'component'
+})
+
+db.components.belongsTo(db.wardrobes, {
+    foreignKey: 'wardrobe_id',
+    as: 'wardrobe'
+})
+
+db.outfits.hasMany(db.components, {
+    foreignKey: 'outfit_id',
+    as: 'component'
+})
+
+db.components.belongsTo(db.outfits, {
+    foreignKey: 'outfit_id',
+    as: 'outfit'
 })
 
 module.exports = db
