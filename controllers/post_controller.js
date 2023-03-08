@@ -1,3 +1,4 @@
+const asyncHandler = require('express-async-handler');
 const db = require('../models')
 const { Op } = require('sequelize')
 const sequelize = require('sequelize')
@@ -10,10 +11,10 @@ const Post = db.posts
 const storage = firebaseApp.storage();
 const bucket = storage.bucket();
 
-// ------------ CREATE ------------
-
-// create post
-const addPost = async (req, res) => {
+// @desc    Create Post
+// @route   POST /api/post/add_post
+// @access  Private
+const addPost = asyncHandler(async (req, res) => {
     if (req.files) {
         let uuid = UUID();
         let file = await req.files.file
@@ -48,47 +49,51 @@ const addPost = async (req, res) => {
     } else {
         res.status(400).send()
     }
-}
+})
 
-// ------------ READ ------------
-
-// get all posts
-const getAllPosts = async (req, res) => {
+// @desc    Get All Posts
+// @route   POST /api/post/all_post
+// @access  Private
+const getAllPosts = asyncHandler(async (req, res) => {
     let posts = await Post.findAll()
     res.status(200).send(posts)
-}
+})
 
-// get all my posts
-const getAllProfilePosts = async (req, res) => {
+// @desc    Get All My Posts
+// @route   GET /api/post/all_profile_post/:id
+// @access  Private
+const getAllProfilePosts = asyncHandler(async (req, res) => {
     let id = req.params.id
     let posts = await Post.findAll({ where: { user_id: id }})
     res.status(200).send(posts)
-}
+})
 
-// get one post
-const getOnePost = async (req, res) => {
+// @desc    Get One Post
+// @route   GET /api/post/:id
+// @access  Private
+const getOnePost = asyncHandler(async (req, res) => {
     let id = req.params.id
     let post = await Post.findOne({ where: { id: id }})
     res.status(200).send(post)
-}
+})
 
-// ------------ UPDATE ------------
-
-// update post
-const updatePost = async (req, res) => {
+// @desc    Update Post
+// @route   PUT /api/post/:id
+// @access  Private
+const updatePost = asyncHandler(async (req, res) => {
     let id = req.params.id
     const post = await Post.update(req.body, {where: { id: id }})
     res.status(200).send(post)
-}
+})
 
-// ------------ DELETE ------------
-
-// delete one post
-const deletePost = async (req, res) => {
+// @desc    Delete One Post
+// @route   DELETE /api/post/:id
+// @access  Private
+const deletePost = asyncHandler(async (req, res) => {
     let id = req.params.id
     await Post.destroy({ where: { id: id } })
     res.status(200).send('Post is delete!')
-}
+})
 
 module.exports = {
     addPost,

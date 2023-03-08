@@ -1,3 +1,4 @@
+const asyncHandler = require('express-async-handler');
 const db = require('../models')
 const { Op } = require('sequelize')
 const firebaseApp = require("../config/firebase_config");
@@ -12,10 +13,10 @@ const Component = db.components
 const storage = firebaseApp.storage();
 const bucket = storage.bucket();
 
-// ------------ CREATE ------------
-
-// create wardrobe
-const addWardrobe = async (req, res) => {
+// @desc    Create wardrobe
+// @route   POST /api/wardrobe/add_wardrobe
+// @access  Private
+const addWardrobe = asyncHandler(async (req, res) => {
     if (req.files) {
         let uuid = UUID();
         let file = await req.files.file
@@ -53,12 +54,12 @@ const addWardrobe = async (req, res) => {
     } else {
         res.status(400).send()
     }
-}
+})
 
-// ------------ READ ------------
-
-// get all wardrobes
-const getAllWardrobes = async (req, res) => {
+// @desc    Get All Wardrobes
+// @route   POST /api/wardrobe/all_wardrobe
+// @access  Private
+const getAllWardrobes = asyncHandler(async (req, res) => {
     let category = req.body.category
     let color = req.body.color
     let type = req.body.type
@@ -123,10 +124,12 @@ const getAllWardrobes = async (req, res) => {
     }
     
     res.status(200).send(wardrobes)
-}
+})
 
-// get all favorite wardrobes
-const getAllFavWardrobes = async (req, res) => {
+// @desc    Get All Favorite Wardrobes
+// @route   POST /api/wardrobe/all_fav_wardrobe
+// @access  Private
+const getAllFavWardrobes = asyncHandler(async (req, res) => {
     let order = req.body.order
     let color = req.body.color
     let where = { is_favorite: true }
@@ -137,17 +140,21 @@ const getAllFavWardrobes = async (req, res) => {
 
     let wardrobes = await Wardrobe.findAll({ where: where, order: order })
     res.status(200).send(wardrobes)
-}
+})
 
-// get one wardrobe
-const getOneWardrobe = async (req, res) => {
+// @desc    Get One Wardrobe
+// @route   GET /api/wardrobe/:id
+// @access  Private
+const getOneWardrobe = asyncHandler(async (req, res) => {
     let id = req.params.id
     let wardrobe = await Wardrobe.findOne({ where: { id: id }})
     res.status(200).send(wardrobe)
-}
+})
 
-// get list of outfit id that contain this wardrobe
-const getOutfitIdFromWardrobe = async (req, res) => {
+// @desc    Get Outfit Id List That Contain This Wardrobe
+// @route   GET /api/wardrobe/outfit_id_from_wardrobe/:id
+// @access  Private
+const getOutfitIdFromWardrobe = asyncHandler(async (req, res) => {
     let id = req.params.id
     let outfitId = await Component.findAll({
         where: { wardrobe_id: id },
@@ -156,12 +163,12 @@ const getOutfitIdFromWardrobe = async (req, res) => {
     console.log(outfitId);
     const outfitIdList = outfitId.map(item => item.outfit_id);
     res.status(200).send(outfitIdList)
-}
+})
 
-// ------------ UPDATE ------------
-
-// update wardrobe
-const updateWardrobe = async (req, res) => {
+// @desc    Update Wardrobe
+// @route   PUT /api/wardrobe/:id
+// @access  Private
+const updateWardrobe = asyncHandler(async (req, res) => {
     let id = req.params.id
     if(req.files) {
         // todo: update firebase image
@@ -171,27 +178,30 @@ const updateWardrobe = async (req, res) => {
         const wardrobe = await Wardrobe.update(req.body, {where: { id: id }})
         res.status(200).send(wardrobe)
     }
-}
+})
 
-const favWardrobe = async (req, res) => {
+// @desc    Update Wardrobe Favorite
+// @route   POST /api/wardrobe/fav_wardrobe/:id
+// @access  Private
+const favWardrobe = asyncHandler(async (req, res) => {
     let id = req.params.id
     await Wardrobe.update(req.body, {where: { id: id }})
     res.status(200).send('success')
-}
+})
 
-// ------------ DELETE ------------
-
-// delete one wardrobe
-const deleteWardrobe = async (req, res) => {
+// @desc    Delete One Wardrobe
+// @route   DELETE /api/wardrobe/:id
+// @access  Private
+const deleteWardrobe = asyncHandler(async (req, res) => {
     let id = req.params.id
     await Wardrobe.destroy({ where: { id: id } })
     res.status(200).send('Wardrobe is delete!')
-}
+})
 
-// ------------ SERVICE ------------
-
-// wardrobe detection
-const wardrobeDetection = async (req, res) => {
+// @desc    Wardrobe Detection Service
+// @route   POST /api/wardrobe/detect_wardrobe
+// @access  Private
+const wardrobeDetection = asyncHandler(async (req, res) => {
     if (req.files) {
         let file = await req.files.file
         // let result = await detectTypeAndCategory(file.data)
@@ -201,7 +211,7 @@ const wardrobeDetection = async (req, res) => {
         res.status(200).send(result)
     }
     res.status(400).send()
-}
+})
 
 module.exports = {
     addWardrobe,

@@ -36,6 +36,7 @@ db.wardrobes = require('./wardrobe_model.js')(sequelize, DataTypes)
 db.outfits = require('./outfit_model.js')(sequelize, DataTypes)
 db.components = require('./component_model.js')(sequelize, DataTypes)
 db.posts = require('./post_model.js')(sequelize, DataTypes)
+db.users = require('./user_model.js')(sequelize, DataTypes)
 
 db.sequelize.sync({ force: false })
 .then(() => {

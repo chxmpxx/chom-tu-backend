@@ -1,3 +1,4 @@
+const asyncHandler = require('express-async-handler');
 const db = require('../models')
 const { Op } = require('sequelize')
 const sequelize = require('sequelize')
@@ -10,10 +11,10 @@ const Outfit = db.outfits
 const storage = firebaseApp.storage();
 const bucket = storage.bucket();
 
-// ------------ CREATE ------------
-
-// create outfit
-const addOutfit = async (req, res) => {
+// @desc    Create Outfit
+// @route   POST /api/outfit/add_outfit
+// @access  Private
+const addOutfit = asyncHandler(async (req, res) => {
     if (req.files) {
         let uuid = UUID();
         let file = await req.files.file
@@ -50,12 +51,12 @@ const addOutfit = async (req, res) => {
     } else {
         res.status(400).send()
     }
-}
+})
 
-// ------------ READ ------------
-
-// get all outfits
-const getAllOutfits = async (req, res) => {
+// @desc    Get All Outfits
+// @route   POST /api/outfit/all_outfit
+// @access  Private
+const getAllOutfits = asyncHandler(async (req, res) => {
     let order = req.body.order
     let style = req.body.style
     let where = {}
@@ -66,10 +67,12 @@ const getAllOutfits = async (req, res) => {
   
     let outfits = await Outfit.findAll({ where: where, order: order })
     res.status(200).send(outfits)
-}
+})
 
-// get all favorite outfits
-const getAllFavOutfits = async (req, res) => {
+// @desc    Get All Favorite Outfits
+// @route   POST /api/outfit/all_fav_outfit
+// @access  Private
+const getAllFavOutfits = asyncHandler(async (req, res) => {
     let order = req.body.order
     let style = req.body.style
     let where = { is_favorite: true }
@@ -80,17 +83,21 @@ const getAllFavOutfits = async (req, res) => {
 
     let outfits = await Outfit.findAll({ where: where, order: order })
     res.status(200).send(outfits)
-}
+})
 
-// get one outfit
-const getOneOutfit = async (req, res) => {
+// @desc    Get One Outfit
+// @route   GET /api/outfit/:id
+// @access  Private
+const getOneOutfit = asyncHandler(async (req, res) => {
     let id = req.params.id
     let outfit = await Outfit.findOne({ where: { id: id }})
     res.status(200).send(outfit)
-}
+})
 
-// get outfit style
-const getStyle = async (req, res) => {
+// @desc    Get Outfit Style
+// @route   GET /api/outfit/get_style/:id
+// @access  Private
+const getStyle = asyncHandler(async (req, res) => {
     let id = req.params.id
     let outfit = await Outfit.findAll({
         where: { user_id: id },
@@ -98,12 +105,12 @@ const getStyle = async (req, res) => {
     })
     const styleList = outfit.map(item => item.style);
     res.status(200).send(styleList)
-}
+})
 
-// ------------ UPDATE ------------
-
-// update outfit
-const updateOutfit = async (req, res) => {
+// @desc    Update Outfit
+// @route   PUT /api/outfit/:id
+// @access  Private
+const updateOutfit = asyncHandler(async (req, res) => {
     let id = req.params.id
     if(req.files) {
         // todo: update firebase image
@@ -113,22 +120,25 @@ const updateOutfit = async (req, res) => {
         const outfit = await Outfit.update(req.body, {where: { id: id }})
         res.status(200).send(outfit)
     }
-}
+})
 
-const favOutfit = async (req, res) => {
+// @desc    Update Outfit Favorite
+// @route   POST /api/outfit/fav_outfit/:id
+// @access  Private
+const favOutfit = asyncHandler(async (req, res) => {
     let id = req.params.id
     await Outfit.update(req.body, {where: { id: id }})
     res.status(200).send('success')
-}
+})
 
-// ------------ DELETE ------------
-
-// delete one outfit
-const deleteOutfit = async (req, res) => {
+// @desc    Delete One Outfit
+// @route   DELETE /api/outfit/:id
+// @access  Private
+const deleteOutfit = asyncHandler(async (req, res) => {
     let id = req.params.id
     await Outfit.destroy({ where: { id: id } })
     res.status(200).send('Outfit is delete!')
-}
+})
 
 module.exports = {
     addOutfit,
