@@ -6,6 +6,9 @@ const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
 
 const User = db.users
+const Post = db.posts
+const Like = db.likes
+const SavedPost = db.saved_posts
 
 // @desc    Sign Up
 // @route   POST /api/user/sign_up
@@ -86,6 +89,25 @@ const login = asyncHandler(async (req, res) => {
                 }
             }
         }
+
+        // Setup Post
+        Post.update({ is_like: false, is_saved: false }, { where: {} })
+
+        // Setup is_like
+        let likePostIdList = await Like.findAll({
+            where: { user_id: user.id },
+            attributes: ['post_id']
+        });
+        likePostIdList = likePostIdList.map(item => item.post_id);
+        Post.update({ is_like: true }, { where: { id: likePostIdList } });
+
+        // Setup is_saved
+        let savedPostIdList = await SavedPost.findAll({
+            where: { user_id: user.id },
+            attributes: ['post_id']
+        });
+        savedPostIdList = savedPostIdList.map(item => item.post_id);
+        Post.update({ is_saved: true }, { where: { id: savedPostIdList } });
         
         res.status(200).json(
             {

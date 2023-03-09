@@ -20,12 +20,16 @@ const outfitRouter = require('./routes/outfit_router')
 const componentRouter = require('./routes/component_router')
 const postRouter = require('./routes/post_router')
 const userRouter = require('./routes/user_router')
+const likeRouter = require('./routes/like_router')
+const savedPostRouter = require('./routes/saved_post_router')
 
 app.use('/api/wardrobe', wardrobeRouter)
 app.use('/api/outfit', outfitRouter)
 app.use('/api/component', componentRouter)
 app.use('/api/post', postRouter)
 app.use('/api/user', userRouter)
+app.use('/api/like', likeRouter)
+app.use('/api/saved_post', savedPostRouter)
 
 // testing api
 app.use('/chomtu', (req, res) => {

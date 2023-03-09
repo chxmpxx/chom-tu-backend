@@ -37,13 +37,15 @@ db.outfits = require('./outfit_model.js')(sequelize, DataTypes)
 db.components = require('./component_model.js')(sequelize, DataTypes)
 db.posts = require('./post_model.js')(sequelize, DataTypes)
 db.users = require('./user_model.js')(sequelize, DataTypes)
+db.likes = require('./like_model.js')(sequelize, DataTypes)
+db.saved_posts = require('./saved_post_model.js')(sequelize, DataTypes)
 
 db.sequelize.sync({ force: false })
 .then(() => {
     console.log('yes re-sync done!');
 })
 
-// create Relationships
+// Create Relationships
 db.wardrobes.hasMany(db.components, {
     foreignKey: 'wardrobe_id',
     as: 'component'
@@ -62,6 +64,26 @@ db.outfits.hasMany(db.components, {
 db.components.belongsTo(db.outfits, {
     foreignKey: 'outfit_id',
     as: 'outfit'
+})
+
+db.posts.hasMany(db.likes, {
+    foreignKey: 'post_id',
+    as: 'like'
+})
+
+db.likes.belongsTo(db.posts, {
+    foreignKey: 'post_id',
+    as: 'post'
+})
+
+db.posts.hasMany(db.saved_posts, {
+    foreignKey: 'post_id',
+    as: 'saved_post'
+})
+
+db.saved_posts.belongsTo(db.posts, {
+    foreignKey: 'post_id',
+    as: 'post'
 })
 
 module.exports = db

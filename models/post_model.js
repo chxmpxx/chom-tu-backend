@@ -12,6 +12,18 @@ module.exports = (sequelize, DataTypes) => {
         },
         caption: {
             type: DataTypes.STRING
+        },
+        likes: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0
+        },
+        is_like: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
+        },
+        is_saved: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
         }
     })
 
