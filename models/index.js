@@ -39,6 +39,7 @@ db.posts = require('./post_model.js')(sequelize, DataTypes)
 db.users = require('./user_model.js')(sequelize, DataTypes)
 db.likes = require('./like_model.js')(sequelize, DataTypes)
 db.saved_posts = require('./saved_post_model.js')(sequelize, DataTypes)
+db.reports = require('./report_model.js')(sequelize, DataTypes)
 
 db.sequelize.sync({ force: false })
 .then(() => {
@@ -84,6 +85,27 @@ db.posts.hasMany(db.saved_posts, {
 db.saved_posts.belongsTo(db.posts, {
     foreignKey: 'post_id',
     as: 'post'
+})
+
+db.posts.hasMany(db.reports, {
+    foreignKey: 'post_id',
+    as: 'report'
+})
+
+db.reports.belongsTo(db.posts, {
+    foreignKey: 'post_id',
+    as: 'post'
+})
+
+// user
+db.users.hasMany(db.posts, {
+    foreignKey: 'user_id',
+    as: 'post'
+})
+
+db.posts.belongsTo(db.users, {
+    foreignKey: 'user_id',
+    as: 'user'
 })
 
 module.exports = db
