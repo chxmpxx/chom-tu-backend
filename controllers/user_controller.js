@@ -109,35 +109,61 @@ const login = asyncHandler(async (req, res) => {
         savedPostIdList = savedPostIdList.map(item => item.post_id);
         Post.update({ is_saved: true }, { where: { id: savedPostIdList } });
         
-        res.status(200).json(
+        const accessToken = jwt.sign(
             {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                username: user.username,
-                bio: user.bio,
-                user_img: user.user_img
-            }
-        )
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    username: user.username,
+                    bio: user.bio,
+                    user_img: user.user_img
+                    }
+            },
+            process.env.ACCESS_TOKEN_SECRET,
+        );
 
-        // const accessToken = jwt.sign(
-        //     {
-        //         id: user.id,
-        //         name: user.name,
-        //         email: user.email,
-        //         username: user.username,
-        //         bio: user.bio,
-        //         user_img: user.user_img
-        //     },
-        //     process.env.ACCESS_TOKEN_SECRET,
-        // );
-        // res.status(200).json({accessToken: accessToken, message: 'Login Success'});
+        res.status(200).json({ accessToken: accessToken, message: 'Login Success' });
     } catch (error) {
         res.status(500).json({ error: error.message })
     }
 })
 
+// @desc    Search User
+// @route   POST /api/user/search_user
+// @access  Private
+const searchUser = asyncHandler(async (req, res) => {
+    let username = req.body.username
+
+    let users = await User.findAll({
+        where: { username: {[Op.startsWith]: username} }
+    });
+
+    res.status(200).send(users)
+})
+
+// @desc    Get One User
+// @route   GET /api/user/:id
+// @access  Private
+const getOneUser = asyncHandler(async (req, res) => {
+    let id = req.params.id
+    let user = await User.findOne({ where: { id: id }})
+    res.status(200).send(user)
+})
+
+// @desc    Get Current User Id
+// @route   GET /api/user/current_user_id
+// @access  Private
+const getCurrentUserId = asyncHandler(async (req, res) => {
+    let user = await User.findOne({ where: { id: req.user.id }})
+    console.log(user.id);
+    res.status(200).send(user.id)
+})
+
 module.exports = {
     signUp,
-    login
+    login,
+    searchUser,
+    getOneUser,
+    getCurrentUserId
 }

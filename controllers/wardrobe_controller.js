@@ -38,7 +38,7 @@ const addWardrobe = asyncHandler(async (req, res) => {
     
         blobStream.on("finish", async () => {
             let info = {
-                user_id: req.body.user_id,
+                user_id: req.user.id,
                 category: req.body.category,
                 sub_category: req.body.sub_category,
                 color: req.body.color,
@@ -69,7 +69,7 @@ const getAllWardrobes = asyncHandler(async (req, res) => {
     let bottom = req.body.bottom
 
     let wardrobes = [];
-    let where = {category: category}
+    let where = {user_id: req.user.id, category: category}
         
     if (color.length != 0) {
         where.color =  { [Op.in]: color }
@@ -132,7 +132,7 @@ const getAllWardrobes = asyncHandler(async (req, res) => {
 const getAllFavWardrobes = asyncHandler(async (req, res) => {
     let order = req.body.order
     let color = req.body.color
-    let where = { is_favorite: true }
+    let where = { user_id: req.user.id, is_favorite: true }
         
     if (color.length != 0) {
         where.color =  { [Op.in]: color }
@@ -207,7 +207,7 @@ const wardrobeDetection = asyncHandler(async (req, res) => {
         // let result = await detectTypeAndCategory(file.data)
         // result.color = await detectColor(file.data)
 
-        let result = { category: 'Top', subCategory: 'None', color: 'Pink', type: 'Vest'}
+        let result = { category: 'Top', subCategory: 'Skirts', color: 'Pink', type: 'Vest' }
         res.status(200).send(result)
     }
     res.status(400).send()

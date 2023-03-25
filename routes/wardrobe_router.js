@@ -1,9 +1,12 @@
 const wardrobeController = require('../controllers/wardrobe_controller')
+const auth = require('../middleware/auth')
 
 // router
 const router = require('express').Router()
 
 // use router
+router.use(auth);
+
 router.post('/all_wardrobe', wardrobeController.getAllWardrobes)
 router.post('/all_fav_wardrobe', wardrobeController.getAllFavWardrobes)
 router.post('/add_wardrobe', wardrobeController.addWardrobe)

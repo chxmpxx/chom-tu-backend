@@ -1,4 +1,5 @@
 const dbConfig = require('../config/db_config')
+require('dotenv').config()
 
 const {Sequelize, DataTypes} = require('sequelize')
 

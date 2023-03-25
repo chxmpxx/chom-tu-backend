@@ -36,7 +36,7 @@ const addPost = asyncHandler(async (req, res) => {
     
         blobStream.on("finish", async () => {
             let info = {
-                user_id: req.body.user_id,
+                user_id: req.user.id,
                 post_img: createPersistentDownloadUrl(fileName, uuid),
                 img_detail: req.body.img_detail,
                 caption: req.body.caption,
@@ -55,16 +55,25 @@ const addPost = asyncHandler(async (req, res) => {
 // @route   POST /api/post/all_post
 // @access  Private
 const getAllPosts = asyncHandler(async (req, res) => {
+    // todo: where follow
     let posts = await Post.findAll()
     res.status(200).send(posts)
 })
 
-// @desc    Get All My Posts
+// @desc    Get All This User Posts
 // @route   GET /api/post/all_profile_post/:id
 // @access  Private
 const getAllProfilePosts = asyncHandler(async (req, res) => {
     let id = req.params.id
     let posts = await Post.findAll({ where: { user_id: id }})
+    res.status(200).send(posts)
+})
+
+// @desc    Get All My Posts
+// @route   GET /api/post/all_my_profile_post
+// @access  Private
+const getAllMyProfilePosts = asyncHandler(async (req, res) => {
+    let posts = await Post.findAll({ where: { user_id: req.user.id }})
     res.status(200).send(posts)
 })
 
@@ -100,6 +109,7 @@ module.exports = {
     
     getAllPosts,
     getAllProfilePosts,
+    getAllMyProfilePosts,
     getOnePost,
 
     updatePost,

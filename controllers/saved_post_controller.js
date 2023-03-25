@@ -9,7 +9,7 @@ const Post = db.posts
 // @access  Private
 const addSavedPost = asyncHandler(async (req, res) => {
     const info = {
-      user_id: req.body.user_id,
+      user_id: req.user.id,
       post_id: req.body.post_id
     }
     await SavedPost.create(info);
@@ -22,13 +22,11 @@ const addSavedPost = asyncHandler(async (req, res) => {
 })
 
 // @desc    Get All Saved Posts
-// @route   GET /api/saved_post/all_saved_posts/:id
+// @route   GET /api/saved_post/all_saved_posts
 // @access  Private
 const getAllSavedPosts = asyncHandler(async (req, res) => {
-    let id = req.params.id
-
     let postIdList = await SavedPost.findAll({
-        where: { user_id: id },
+        where: { user_id: req.user.id },
         attributes: ['post_id']
     });
     postIdList = postIdList.map(item => item.post_id);

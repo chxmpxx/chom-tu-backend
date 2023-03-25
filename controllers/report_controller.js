@@ -10,10 +10,9 @@ const Post = db.posts
 // @route   POST /api/report/add_report
 // @access  Private
 const addReport = asyncHandler(async (req, res) => {
-    // todo: delete reported_by
     const info = {
         post_id: req.body.post_id,
-        reported_by: req.body.reported_by,
+        reported_by: req.user.id,
         detail: req.body.detail,
         sub_detail: req.body.sub_detail
     }

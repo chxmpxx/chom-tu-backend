@@ -36,7 +36,7 @@ const addOutfit = asyncHandler(async (req, res) => {
     
         blobStream.on("finish", async () => {
             let info = {
-                user_id: req.body.user_id,
+                user_id: req.user.id,
                 style: req.body.style,
                 detail: req.body.detail,
                 is_favorite: false,
@@ -59,7 +59,7 @@ const addOutfit = asyncHandler(async (req, res) => {
 const getAllOutfits = asyncHandler(async (req, res) => {
     let order = req.body.order
     let style = req.body.style
-    let where = {}
+    let where = {user_id: req.user.id}
 
     if (style.length != 0) {
         where.style =  { [Op.in]: style }
@@ -75,7 +75,7 @@ const getAllOutfits = asyncHandler(async (req, res) => {
 const getAllFavOutfits = asyncHandler(async (req, res) => {
     let order = req.body.order
     let style = req.body.style
-    let where = { is_favorite: true }
+    let where = { user_id: req.user.id, is_favorite: true }
         
     if (style.length != 0) {
         where.style =  { [Op.in]: style }
@@ -95,12 +95,11 @@ const getOneOutfit = asyncHandler(async (req, res) => {
 })
 
 // @desc    Get Outfit Style
-// @route   GET /api/outfit/get_style/:id
+// @route   GET /api/outfit/get_style
 // @access  Private
 const getStyle = asyncHandler(async (req, res) => {
-    let id = req.params.id
     let outfit = await Outfit.findAll({
-        where: { user_id: id },
+        where: { user_id: req.user.id },
         attributes: [[sequelize.fn('DISTINCT', sequelize.col('style')) ,'style']]
     })
     const styleList = outfit.map(item => item.style);
