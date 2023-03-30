@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: 'None'
         },
         color: {
-            type: DataTypes.ENUM('Brown', 'Yellow', 'Purple', 'Orange', 'Green', 'Pink', 'Blue', 'Red', 'White', 'Beige', 'Black', 'Grey', 'Skin', 'Multi'),
+            type: DataTypes.ENUM('Brown', 'Yellow', 'Purple', 'Orange', 'Green', 'Pink', 'Blue', 'Red', 'White', 'Beige', 'Black', 'Grey', 'Multi'),
         },
         type: {
             type: DataTypes.ENUM(

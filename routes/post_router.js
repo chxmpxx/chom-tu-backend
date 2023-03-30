@@ -10,8 +10,7 @@ router.use(auth);
 router.post('/all_post', postController.getAllPosts)
 router.post('/add_post', postController.addPost)
 
-router.get('/all_profile_post/:id', postController.getAllProfilePosts)
-router.get('/all_my_profile_post', postController.getAllMyProfilePosts)
+router.get('/all_profile_post/:id/:is_current_user', postController.getAllProfilePosts)
 router.get('/:id', postController.getOnePost)
 
 router.put('/:id', postController.updatePost)

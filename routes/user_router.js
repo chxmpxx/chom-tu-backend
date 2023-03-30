@@ -10,6 +10,5 @@ router.post('/login', userController.login)
 
 router.post('/search_user', auth, userController.searchUser)
 router.get('/:id', auth, userController.getOneUser)
-router.get('/current_user_id', auth, userController.getCurrentUserId)
 
 module.exports = router

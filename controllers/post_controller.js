@@ -7,6 +7,8 @@ const { createPersistentDownloadUrl } = require('../key/firebase_storage');
 const UUID = require("uuid-v4");
 
 const Post = db.posts
+const User = db.users
+const Follower = db.followers
 
 const storage = firebaseApp.storage();
 const bucket = storage.bucket();
@@ -61,21 +63,40 @@ const getAllPosts = asyncHandler(async (req, res) => {
 })
 
 // @desc    Get All This User Posts
-// @route   GET /api/post/all_profile_post/:id
+// @route   GET /api/post/all_profile_post/:id/:is_current_user
 // @access  Private
 const getAllProfilePosts = asyncHandler(async (req, res) => {
-    let id = req.params.id
-    let posts = await Post.findAll({ where: { user_id: id }})
-    res.status(200).send(posts)
-})
-
-// @desc    Get All My Posts
-// @route   GET /api/post/all_my_profile_post
-// @access  Private
-const getAllMyProfilePosts = asyncHandler(async (req, res) => {
-    let posts = await Post.findAll({ where: { user_id: req.user.id }})
-    res.status(200).send(posts)
-})
+    let id = req.params.id;
+    let isCurrentUser = req.params.is_current_user;
+    let is_follow = false;
+  
+    if (isCurrentUser === 'true') {
+        id = req.user.id;
+    } else {
+        let follow = await Follower.findAll({
+            where: { user_id: id, follower_id: req.user.id }
+        });
+        if (follow.length > 0) {
+            is_follow = true;
+        }
+    }
+  
+    let posts = await Post.findAll({ where: { user_id: id } });
+    let user = await User.findOne({ where: { id: id } });
+    
+    let followers = await Follower.count({ where: { user_id: id } });
+    let following = await Follower.count({ where: { follower_id: id } });
+  
+    let profile = { 
+      'posts': posts, 
+      'user': user, 
+      'followers': followers, 
+      'following': following, 
+      'is_follow': is_follow 
+    };
+    res.status(200).send(profile);
+});
+  
 
 // @desc    Get One Post
 // @route   GET /api/post/:id
@@ -109,7 +130,6 @@ module.exports = {
     
     getAllPosts,
     getAllProfilePosts,
-    getAllMyProfilePosts,
     getOnePost,
 
     updatePost,

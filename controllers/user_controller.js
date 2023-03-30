@@ -14,119 +14,104 @@ const SavedPost = db.saved_posts
 // @route   POST /api/user/sign_up
 // @access  Public
 const signUp = asyncHandler(async (req, res) => {
-    try {
-        let name = req.body.name
-        let email = req.body.email
-        let username = req.body.username
-        let password = req.body.password
-        let confirmPassword = req.body.confirm_password
+    let name = req.body.name
+    let email = req.body.email
+    let username = req.body.username
+    let password = req.body.password
+    let confirmPassword = req.body.confirm_password
 
-        let validate = {"email": "", "username": "", "password": ""}
+    // validate
+    const existingEmail = await User.findOne({ where: { email }})
+    const existingUsername = await User.findOne({ where: { username }})
+    const validate = ( existingEmail || existingUsername ||
+        password !== confirmPassword )
+        && { email: existingEmail ? 'existingEmail' : '',
+        username: existingUsername ? 'existingUsername' : '',
+        password: password !== confirmPassword ? 'passwordNotMatch' : '' }
+    if (validate) {
+        return res.status(400).json(validate)
+    } 
 
-        let existingEmail = await User.findOne({ where: { email: email }})
-        if (existingEmail) {
-            validate.email = 'existingEmail'
-        }
+    const salt = await bcrypt.genSalt()
+    const passwordHash = await bcrypt.hash(password, salt)
 
-        let existingUsername = await User.findOne({ where: { username: username }})
-        if (existingUsername) {
-            validate.username = 'existingUsername'
-        }
-
-        if (password != confirmPassword) {
-            validate.password = 'passwordNotMatch'
-        }
-
-        if (existingEmail != null || existingUsername != null || password != confirmPassword || name.length == 0 || email.length == 0 || username.length == 0 || password.length == 0 || confirmPassword.length == 0) {
-            return res.status(400).json(validate)
-        }
-
-        const salt = await bcrypt.genSalt()
-        const passwordHash = await bcrypt.hash(password, salt)
-
-        let info = {
-            name,
-            email,
-            username,
-            password: passwordHash
-        }
-        const user = await User.create(info)
-        return res.status(200).send(user)
-    } catch (error) {
-        return res.status(500).json({ error: error.message })
+    let info = {
+        name,
+        email,
+        username,
+        password: passwordHash
     }
+
+    await User.create(info)
+
+    res.status(200).json({ message: 'Sign Up Success' });
 })
 
 // @desc    Login
 // @route   POST /api/user/login
 // @access  Public
 const login = asyncHandler(async (req, res) => {
-    try {
-        let username = req.body.username
-        let password = req.body.password
+    let username = req.body.username
+    let password = req.body.password
 
-        let validate = {"account": "", "password": "", "ban": ""}
+    const user = await User.findOne({ where: { username: username }})
 
-        const user = await User.findOne({ where: { username: username }})
-        if (username.length == 0) {
-            return res.status(400).json(validate)
-        } else if (!user) {
-            validate.account = 'noAccount'
-            return res.status(400).json(validate)
-        } else {
-            if (password.length == 0) {
-                return res.status(400).json(validate)
-            } else {
-                const isMatch = await bcrypt.compare(password, user.password)
-                if (!isMatch) {
-                    validate.password = 'passwordIncorrect'
-                    return res.status(400).json(validate)
-                } else {
-                    if (user.is_ban) {
-                        validate.ban = 'banned'
-                        return res.status(400).json(validate)
-                    }
-                }
-            }
-        }
+    // validate
+    let validate = {"account": "", "password": "", "ban": ""}
 
-        // Setup Post
-        Post.update({ is_like: false, is_saved: false }, { where: {} })
-
-        // Setup is_like
-        let likePostIdList = await Like.findAll({
-            where: { user_id: user.id },
-            attributes: ['post_id']
-        });
-        likePostIdList = likePostIdList.map(item => item.post_id);
-        Post.update({ is_like: true }, { where: { id: likePostIdList } });
-
-        // Setup is_saved
-        let savedPostIdList = await SavedPost.findAll({
-            where: { user_id: user.id },
-            attributes: ['post_id']
-        });
-        savedPostIdList = savedPostIdList.map(item => item.post_id);
-        Post.update({ is_saved: true }, { where: { id: savedPostIdList } });
-        
-        const accessToken = jwt.sign(
-            {
-                user: {
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    username: user.username,
-                    bio: user.bio,
-                    user_img: user.user_img
-                    }
-            },
-            process.env.ACCESS_TOKEN_SECRET,
-        );
-
-        res.status(200).json({ accessToken: accessToken, message: 'Login Success' });
-    } catch (error) {
-        res.status(500).json({ error: error.message })
+    if (username.length == 0) {
+        return res.status(400).json(validate)
+    } 
+    if (!user) {
+        validate.account = 'noAccount'
+        return res.status(400).json(validate)
     }
+    if (password.length == 0) {
+        return res.status(400).json(validate)
+    } 
+    if (!await bcrypt.compare(password, user.password)) {
+        validate.password = 'passwordIncorrect'
+        return res.status(400).json(validate)
+    }
+    if (user.is_ban) {
+        validate.ban = 'banned'
+        return res.status(400).json(validate)
+    }
+
+    // Setup Post
+    Post.update({ is_like: false, is_saved: false }, { where: {} })
+
+    // Setup is_like
+    let likePostIdList = await Like.findAll({
+        where: { user_id: user.id },
+        attributes: ['post_id']
+    });
+    likePostIdList = likePostIdList.map(item => item.post_id);
+    Post.update({ is_like: true }, { where: { id: likePostIdList } });
+
+    // Setup is_saved
+    let savedPostIdList = await SavedPost.findAll({
+        where: { user_id: user.id },
+        attributes: ['post_id']
+    });
+    savedPostIdList = savedPostIdList.map(item => item.post_id);
+    Post.update({ is_saved: true }, { where: { id: savedPostIdList } });
+    
+    const accessToken = jwt.sign(
+        {
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                username: user.username,
+                bio: user.bio,
+                user_img: user.user_img
+                }
+        },
+        process.env.ACCESS_TOKEN_SECRET,
+    );
+
+    res.status(200).json({ accessToken: accessToken, message: 'Login Success' });
 })
 
 // @desc    Search User
@@ -136,8 +121,11 @@ const searchUser = asyncHandler(async (req, res) => {
     let username = req.body.username
 
     let users = await User.findAll({
-        where: { username: {[Op.startsWith]: username} }
-    });
+        where: {
+            username: { [Op.startsWith]: username },
+            id: { [Op.ne]: req.user.id }
+        }
+    })
 
     res.status(200).send(users)
 })
@@ -151,19 +139,9 @@ const getOneUser = asyncHandler(async (req, res) => {
     res.status(200).send(user)
 })
 
-// @desc    Get Current User Id
-// @route   GET /api/user/current_user_id
-// @access  Private
-const getCurrentUserId = asyncHandler(async (req, res) => {
-    let user = await User.findOne({ where: { id: req.user.id }})
-    console.log(user.id);
-    res.status(200).send(user.id)
-})
-
 module.exports = {
     signUp,
     login,
     searchUser,
-    getOneUser,
-    getCurrentUserId
+    getOneUser
 }

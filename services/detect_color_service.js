@@ -46,6 +46,8 @@ function findColor(data) {
             element.closest_palette_color_parent = 'Red'
         } else if (element.closest_palette_color_parent == 'grey' || element.closest_palette_color_parent == 'light grey') {
             element.closest_palette_color_parent = 'Grey'
+        } else if (element.closest_palette_color_parent == 'beige' || element.closest_palette_color_parent == 'skin') {
+            element.closest_palette_color_parent = 'Beige'
         } else {
             element.closest_palette_color_parent = toPascalCase(element.closest_palette_color_parent)
         }

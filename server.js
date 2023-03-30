@@ -23,6 +23,7 @@ const userRouter = require('./routes/user_router')
 const likeRouter = require('./routes/like_router')
 const savedPostRouter = require('./routes/saved_post_router')
 const reportRouter = require('./routes/report_router')
+const followerRouter = require('./routes/follower_router')
 
 app.use('/api/wardrobe', wardrobeRouter)
 app.use('/api/outfit', outfitRouter)
@@ -32,6 +33,7 @@ app.use('/api/user', userRouter)
 app.use('/api/like', likeRouter)
 app.use('/api/saved_post', savedPostRouter)
 app.use('/api/report', reportRouter)
+app.use('/api/follower', followerRouter)
 
 // testing api
 app.use('/chomtu', (req, res) => {
