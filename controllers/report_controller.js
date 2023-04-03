@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const db = require('../models')
 const { Op } = require('sequelize')
+const sequelize = require('sequelize')
 
 const Report = db.reports
 const User = db.users
@@ -28,11 +29,13 @@ const getAllReports = asyncHandler(async (req, res) => {
     let detail = req.body.detail
     let status = req.body.status
     let where = {}
+    let paranoid = true
 
     if (status == 'None') {
         where.status = status
     } else {
         where.status = { [Op.ne]: 'None' }
+        paranoid = false
     }
     
     if (detail.length != 0) {
@@ -44,15 +47,19 @@ const getAllReports = asyncHandler(async (req, res) => {
     for (let i = 0; i < reports.length; i++) {
         let postOwnerName = await Post.findOne({
             where: { id: reports[i].post_id },
+            paranoid: paranoid,
             include: [
                 {
                     model: User,
                     as: 'user',
-                    attributes: ['username']
+                    attributes: ['username'],
+                    paranoid: paranoid
                 }
             ]
         })
-        reports[i].dataValues.post_owner_name = postOwnerName.user.username
+        if (postOwnerName && postOwnerName.user) {
+            reports[i].dataValues.post_owner_name = postOwnerName.user.username
+        }
     }
 
     if (status != 'None') {
@@ -61,7 +68,9 @@ const getAllReports = asyncHandler(async (req, res) => {
                 where: { id: reports[i].reported_by },
                 attributes: ['username']
             })
-            reports[i].dataValues.reported_by_name = reportedByName.username
+            if (reportedByName) {
+                reports[i].dataValues.reported_by_name = reportedByName.username
+            }
         }
     }
 
@@ -110,14 +119,29 @@ const getOneReport = asyncHandler(async (req, res) => {
 // @access  Private
 const updateReport = asyncHandler(async (req, res) => {
     let id = req.params.id
+    let charges = req.body.charges
+
     const report = await Report.update(req.body, {where: { id: id }})
 
     if (req.body.status == 'Delete Post') {
         let id = req.body.post_id
         // todo: add soft delete
         await Post.destroy({ where: { id: id } })
+
+        // automatic ban
+        let post = await Post.findOne({ where: { id: id }, attributes: ['user_id'], paranoid: false })
+        let user = await User.findOne({ where: { id: post.user_id }})
+        await User.update(
+            { total_charges: sequelize.literal('total_charges + 1') },
+            { where: { id: user.id } }
+        )
+        user = await User.findOne({ where: { id: post.user_id }})
+
+        if (user.total_charges >= charges) {
+            let info = { is_ban: 1 }
+            await User.update(info, {where: { id: user.id }})
+        }
     }
-    console.log(report);
     res.status(200).send(report)
 })
 

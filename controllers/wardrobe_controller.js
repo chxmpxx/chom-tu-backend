@@ -6,6 +6,7 @@ const { createPersistentDownloadUrl } = require('../key/firebase_storage');
 const UUID = require("uuid-v4");
 const { detectTypeAndCategory } = require("../services/detect_category_service");
 const { detectColor } = require("../services/detect_color_service");
+const { log } = require('firebase-functions/logger');
 
 const Wardrobe = db.wardrobes
 const Component = db.components
@@ -170,10 +171,36 @@ const getOutfitIdFromWardrobe = asyncHandler(async (req, res) => {
 // @access  Private
 const updateWardrobe = asyncHandler(async (req, res) => {
     let id = req.params.id
-    if(req.files) {
-        // todo: update firebase image
-        const wardrobe = await Wardrobe.update(req.body, {where: { id: id }})
-        res.status(200).send(wardrobe)
+    if (req.files) {
+        let uuid = UUID();
+        let file = await req.files.file
+        let fileName = file.name
+        fileName = fileName.split('.').join('-' + Date.now() + '.');
+        fileName = `wardrobe/${fileName}`
+
+        const fileUpload = bucket.file(fileName);
+        const blobStream = fileUpload.createWriteStream({
+            metadata: {
+                contentType: file.mimetype,
+                firebaseStorageDownloadTokens: uuid
+            }
+        })
+
+        blobStream.on("error", (err) => {
+            res.status(405).json(err);
+        })
+    
+        blobStream.on("finish", async () => {
+            let info = req.body
+            info.user_id = req.user.id
+            info.wardrobe_img = createPersistentDownloadUrl(fileName, uuid)
+
+            const wardrobe = await Wardrobe.update(req.body, {where: { id: id }})
+            res.status(200).send(wardrobe)
+        })
+
+        blobStream.end(file.data);
+
     } else {
         const wardrobe = await Wardrobe.update(req.body, {where: { id: id }})
         res.status(200).send(wardrobe)
@@ -204,10 +231,14 @@ const deleteWardrobe = asyncHandler(async (req, res) => {
 const wardrobeDetection = asyncHandler(async (req, res) => {
     if (req.files) {
         let file = await req.files.file
-        // let result = await detectTypeAndCategory(file.data)
-        // result.color = await detectColor(file.data)
+        let isDetect = req.body.is_detect
+        let result = { category: 'Top', subCategory: 'Skirts', color: 'Black', type: 'T Shirt' }
 
-        let result = { category: 'Top', subCategory: 'Skirts', color: 'Pink', type: 'Vest' }
+        if (isDetect == 'true') {
+            result = await detectTypeAndCategory(file.data)
+            result.color = await detectColor(file.data)
+        }
+
         res.status(200).send(result)
     }
     res.status(400).send()

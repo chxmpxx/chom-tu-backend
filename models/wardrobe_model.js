@@ -32,6 +32,9 @@ module.exports = (sequelize, DataTypes) => {
         wardrobe_img: {
             type: DataTypes.STRING
         }
+    },
+    {
+        paranoid: true
     })
 
     return Wardrobe

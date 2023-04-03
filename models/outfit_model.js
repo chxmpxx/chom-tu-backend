@@ -21,6 +21,9 @@ module.exports = (sequelize, DataTypes) => {
         outfit_img: {
             type: DataTypes.STRING
         },
+    },
+    {
+        paranoid: true
     })
 
     return Outfit

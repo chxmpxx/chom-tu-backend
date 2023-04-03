@@ -10,6 +10,9 @@ module.exports = (sequelize, DataTypes) => {
         position: {
             type: DataTypes.STRING
         }
+    },
+    {
+        paranoid: true
     })
 
     return Component

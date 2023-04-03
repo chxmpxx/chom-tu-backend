@@ -57,10 +57,34 @@ const addPost = asyncHandler(async (req, res) => {
 // @route   POST /api/post/all_post
 // @access  Private
 const getAllPosts = asyncHandler(async (req, res) => {
-    // todo: where follow
-    let posts = await Post.findAll()
-    res.status(200).send(posts)
-})
+    const following = await Follower.findAll({
+        where: { follower_id: req.user.id },
+        attributes: ['user_id'],
+    });
+    const userIdList = following.map((item) => item.user_id)
+    userIdList.push(req.user.id)
+  
+    const posts = await Post.findAll({ 
+        where: { user_id: userIdList },
+        order: [["createdAt", "DESC"]],
+    });
+    const users = [];
+    const isCurrentUser = [];
+
+    for (let post of posts) {
+        const user = await User.findOne({ where: { id: post.user_id } })
+
+        users.push(user);
+        if (post.user_id != req.user.id) {
+            isCurrentUser.push(false)
+        } else {
+            isCurrentUser.push(true)
+        }
+    }
+    const allPost = { posts, users, "is_current_users": isCurrentUser }
+  
+    res.status(200).send(allPost)
+});
 
 // @desc    Get All This User Posts
 // @route   GET /api/post/all_profile_post/:id/:is_current_user

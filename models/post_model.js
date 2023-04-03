@@ -24,7 +24,10 @@ module.exports = (sequelize, DataTypes) => {
         is_saved: {
             type: DataTypes.BOOLEAN,
             defaultValue: false
-        }
+        },
+    },
+    {
+        paranoid: true
     })
 
     return Post
